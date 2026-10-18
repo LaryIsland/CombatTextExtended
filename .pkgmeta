@@ -1,0 +1,20 @@
+# Packaging for the BigWigs packager (https://github.com/BigWigsMods/packager).
+# The libraries are fetched into libs when packaging.
+
+package-as: CombatTextExtended
+
+externals:
+  libs/LibStub: https://repos.wowace.com/wow/libstub/trunk
+  libs/CallbackHandler-1.0: https://repos.wowace.com/wow/callbackhandler/trunk/CallbackHandler-1.0
+  libs/AceDB-3.0: https://repos.wowace.com/wow/ace3/trunk/AceDB-3.0
+  libs/AceLocale-3.0: https://repos.wowace.com/wow/ace3/trunk/AceLocale-3.0
+  libs/LibSharedMedia-3.0: https://repos.wowace.com/wow/libsharedmedia-3-0/trunk/LibSharedMedia-3.0
+  # Edit Mode frames for the areas. Its licence allows bundling it unmodified only, so it's fetched as is and
+  # pinned to a tested release (18 is the first that knows about Forever's third preset layout).
+  libs/LibEditMode:
+    url: https://github.com/p3lim-wow/LibEditMode
+    tag: 18
+
+# Working notes (the design document, beta checks and the like) aren't part of the addon.
+ignore:
+  - Notes

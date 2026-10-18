@@ -1,0 +1,10 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Script file="libs\LibStub\LibStub.lua"/>
+	<Include file="libs\CallbackHandler-1.0\CallbackHandler-1.0.xml"/>
+	<Include file="libs\AceDB-3.0\AceDB-3.0.xml"/>
+	<Include file="libs\AceLocale-3.0\AceLocale-3.0.xml"/>
+	<Script file="libs\LibSharedMedia-3.0\LibSharedMedia-3.0.lua"/>
+	<!-- Namespace mode: CTX's own copy of LibEditMode, never shared with another addon's through LibStub. -->
+	<Script file="libs\LibEditMode\namespaced.lua"/>
+	<Include file="libs\LibEditMode\embed.xml"/>
+</Ui>

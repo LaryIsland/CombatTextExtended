@@ -1,0 +1,37 @@
+## Interface: 16001
+## Title: Combat Text Extended
+## Author: LaryIsland
+## Version: @project-version@
+## Notes: The game's combat text in areas you move and set up in Edit Mode
+## Category: User Interface
+## IconTexture: Interface\Icons\Spell_Holy_InnerFire
+## SavedVariables: CombatTextExtendedDB
+## OptionalDeps: LibSharedMedia-3.0
+
+embeds.xml
+Locales\enUS.lua
+Core.lua
+# What there is to show and where it starts out (design document 4.8, 4.9, 1.1).
+Catalogue.lua
+Presets.lua
+Media.lua
+# Drawing text in areas with Blizzard's own combat text code (4.1, 4.6).
+Format.lua
+Styles.lua
+Areas.lua
+Router.lua
+# Where text comes from: Blizzard's own messages, cooldowns, triggers, chat (3, 4.4, 4.5, 4.9).
+Blizzard.lua
+Cooldowns.lua
+Triggers.lua
+Notifications.lua
+# Settings: Edit Mode for areas, the Event Types popup, Options > AddOns (4.2, 4.8).
+EditMode.lua
+EventTypes.lua
+Options.lua
+Commands.lua
+TestMode.lua
+#@do-not-package@
+# The beta checks probe (/ctx probe), for development only (design document 5).
+Probe.lua
+#@end-do-not-package@
