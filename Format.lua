@@ -98,6 +98,8 @@ end
 local parts, isLiteral = {}, {}
 local count = 0
 local stripNext = 0 -- characters to take off the front of the next literal piece
+local trimNext = false -- the next literal piece loses its leading spaces
+local droppedLast = false -- the last piece was a code with no value
 
 local function EndsWith(text, ending)
 	return #text >= #ending and text:sub(-#ending) == ending
@@ -107,7 +109,16 @@ local function StartsWith(text, start)
 	return text:sub(1, #start) == start
 end
 
--- Takes the joining text around a dropped code off the last literal part and the next literal piece.
+-- Anything shown so far. Values aren't looked at (they may be hidden): only literal parts can be empty.
+local function Visible()
+	for i = 1, count do
+		if not isLiteral[i] or parts[i] ~= "" then return true end
+	end
+	return false
+end
+
+-- Takes the joining text around a dropped code off the last literal part and the next literal piece, and never leaves
+-- a space at the start of the line or two together.
 local function Prune(nextPiece)
 	local previous = count > 0 and isLiteral[count] and parts[count] or nil
 	local following = type(nextPiece) == "string" and nextPiece or nil
@@ -120,6 +131,7 @@ local function Prune(nextPiece)
 				local kept = previous:sub(1, #previous - #open):gsub("%s+$", "")
 				parts[count] = kept
 				stripNext = #close
+				trimNext = not Visible()
 				return
 			end
 		end
@@ -128,6 +140,9 @@ local function Prune(nextPiece)
 		parts[count] = previous:sub(1, #previous - #DASH)
 	elseif following and StartsWith(following, DASH) then
 		stripNext = #DASH
+		trimNext = not Visible()
+	else
+		trimNext = not Visible() or (previous ~= nil and previous:find("%s$") ~= nil)
 	end
 end
 
@@ -153,17 +168,30 @@ local function Collect(pieces, values, numbers)
 				piece = piece:sub(stripNext + 1)
 				stripNext = 0
 			end
-			if piece ~= "" then Add(piece, true) end
+			if trimNext then
+				piece = piece:gsub("^%s+", "")
+				trimNext = false
+			end
+			if piece ~= "" then
+				Add(piece, true)
+				droppedLast = false
+			end
 		else
 			local code = piece.code
 			local v = values and values[code]
 			if HasValue(v) then
 				if AMOUNTS[code] then v = Format.Amount(v, numbers) end
 				Add(v, false)
+				trimNext, droppedLast = false, false
 			else
 				Prune(pieces[index + 1])
+				droppedLast = true
 			end
 		end
+	end
+	-- "Hit %a %n" with no %n: no space left at the end.
+	if droppedLast and count > 0 and isLiteral[count] then
+		parts[count] = parts[count]:gsub("%s+$", "")
 	end
 	-- Pruning can leave empty literal parts behind.
 	local text = ""
@@ -183,6 +211,7 @@ local function Forget()
 	end
 	count = 0
 	stripNext = 0
+	trimNext, droppedLast = false, false
 end
 
 -- values: { a = ..., n = ... }, any of them possibly hidden. numbers: as for Format.Amount (nil: the profile's).

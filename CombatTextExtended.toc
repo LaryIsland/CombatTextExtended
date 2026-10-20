@@ -15,6 +15,7 @@ Core.lua
 Catalogue.lua
 Presets.lua
 Media.lua
+MSBTImport.lua
 # Drawing text in areas with Blizzard's own combat text code (4.1, 4.6).
 Format.lua
 Styles.lua

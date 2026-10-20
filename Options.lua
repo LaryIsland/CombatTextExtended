@@ -682,6 +682,97 @@ local function NewName(editBox)
 	return name
 end
 
+-- Importing MSBT's profiles: its saved settings file is pasted into a window of its own, as it's many lines and a
+-- popup's box takes one. Then a popup lists the profiles found and asks.
+local MSBT_WINDOW = "CombatTextExtendedMSBTImport"
+local msbtWindow
+
+local function MSBTNext()
+	if RefuseInCombat() or not ns.MSBTImport then return end
+	local profiles = ns.MSBTImport.Parse(msbtWindow.EditBox:GetText())
+	if not profiles then
+		ns.Print(L.PROFILE_MSBT_BAD)
+		return
+	end
+	msbtWindow:Hide()
+	StaticPopup_Show(POPUP_PREFIX .. "PROFILE_MSBT", table.concat(ns.MSBTImport.Names(profiles), "\n"), nil, profiles)
+end
+
+local function MSBTWindow()
+	if msbtWindow then return msbtWindow end
+	local frame = CreateFrame("Frame", MSBT_WINDOW, UIParent)
+	frame:SetSize(520, 380)
+	frame:SetPoint("CENTER")
+	frame:SetFrameStrata("DIALOG")
+	frame:EnableMouse(true)
+	frame:SetMovable(true)
+	frame:SetClampedToScreen(true)
+	frame:RegisterForDrag("LeftButton")
+	frame:SetScript("OnDragStart", frame.StartMoving)
+	frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+	frame:Hide()
+	table.insert(UISpecialFrames, MSBT_WINDOW)
+
+	frame.Border = CreateFrame("Frame", nil, frame, "DialogBorderTranslucentTemplate")
+	ns.TuckBackground(frame.Border)
+	frame.CloseButton = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+	frame.CloseButton:SetPoint("TOPRIGHT")
+
+	frame.Title = frame:CreateFontString(nil, "ARTWORK", "GameFontHighlightLarge")
+	frame.Title:SetPoint("TOP", 0, -15)
+	frame.Title:SetText(L.PROFILE_MSBT_PASTE_TITLE)
+	frame.Text = frame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+	frame.Text:SetPoint("TOPLEFT", 24, -42)
+	frame.Text:SetPoint("TOPRIGHT", -24, -42)
+	frame.Text:SetJustifyH("LEFT")
+	frame.Text:SetText(L.PROFILE_MSBT_PASTE_TEXT)
+
+	local box = CreateFrame("Frame", nil, frame, "InsetFrameTemplate")
+	box:SetPoint("TOPLEFT", frame.Text, "BOTTOMLEFT", -4, -10)
+	box:SetPoint("BOTTOMRIGHT", -20, 50)
+	local scroll = CreateFrame("ScrollFrame", nil, box, "ScrollFrameTemplate")
+	scroll:SetPoint("TOPLEFT", 8, -6)
+	scroll:SetPoint("BOTTOMRIGHT", -26, 6)
+	local edit = CreateFrame("EditBox", nil, scroll)
+	edit:SetMultiLine(true)
+	edit:SetAutoFocus(false)
+	edit:SetFontObject("ChatFontNormal")
+	edit:SetWidth(430)
+	edit:SetScript("OnEscapePressed", function() frame:Hide() end)
+	edit:SetScript("OnTextChanged", function(self)
+		frame.Next:SetEnabled((self:GetText() or ""):find("%S") ~= nil)
+	end)
+	scroll:SetScrollChild(edit)
+	-- A click anywhere in the box, not just on the text so far, puts the cursor in it.
+	box:SetScript("OnMouseDown", function() edit:SetFocus() end)
+	frame.EditBox = edit
+
+	frame.Next = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+	frame.Next:SetSize(120, 22)
+	frame.Next:SetPoint("BOTTOMRIGHT", frame, "BOTTOM", -4, 18)
+	frame.Next:SetText(NEXT)
+	frame.Next:SetScript("OnClick", MSBTNext)
+	frame.Cancel = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+	frame.Cancel:SetSize(120, 22)
+	frame.Cancel:SetPoint("BOTTOMLEFT", frame, "BOTTOM", 4, 18)
+	frame.Cancel:SetText(CANCEL)
+	frame.Cancel:SetScript("OnClick", function() frame:Hide() end)
+
+	-- The pasted file isn't kept once the window closes.
+	frame:SetScript("OnHide", function() edit:SetText("") end)
+	msbtWindow = frame
+	return frame
+end
+
+local function ImportMSBT()
+	if RefuseInCombat() or not ns.db then return end
+	local frame = MSBTWindow()
+	frame.EditBox:SetText("")
+	frame.Next:Disable()
+	frame:Show()
+	frame.EditBox:SetFocus()
+end
+
 local function ExportProfile()
 	if RefuseInCombat() or not ns.db then return end
 	local text = Encode(ns.profile)
@@ -739,6 +830,7 @@ local function BuildProfiles()
 		if RefuseInCombat() then return end
 		StaticPopup_Show(POPUP_PREFIX .. "PROFILE_IMPORT")
 	end)
+	Button(layout, L.PROFILE_MSBT, L.PROFILE_MSBT_IMPORT, ImportMSBT, L.PROFILE_MSBT_TIP)
 
 	-- Presets (design document 1.1, 4.1): each sets up the profile in use (areas, event types, style), after asking.
 	Header(layout, L.OPT_HEADER_PRESETS, L.OPT_HEADER_PRESETS_TIP)
@@ -903,6 +995,23 @@ Popup("PROFILE_EXPORT", {
 	EditBoxOnEnterPressed = function(editBox) editBox:GetParent():Hide() end,
 })
 
+-- Then this character uses the profile made from MSBT's Default (or the first made).
+Popup("PROFILE_MSBT", {
+	text = L.PROFILE_MSBT_CONFIRM, -- %s MSBT's profiles, one per line
+	button1 = YES, button2 = NO,
+	OnAccept = function(_, profiles)
+		if RefuseInCombat() or not ns.db or not ns.MSBTImport then return end
+		local made, target = ns.MSBTImport.ImportAll(profiles)
+		if #made == 0 then return end
+		ns.Print(L.PROFILE_MSBT_DONE:format(table.concat(made, ", ")))
+		if target then
+			ns.db:SetProfile(target)
+			C_Timer.After(0, function() OfferSwitches("msbt") end)
+		end
+		RefreshSoon()
+	end,
+})
+
 -- Importing is two steps, as in both model addons: paste the text (checked before going on), then name the profile.
 Popup("PROFILE_IMPORT", {
 	text = L.PROFILE_IMPORT_TEXT,
@@ -986,4 +1095,5 @@ ns.Listen("COMBAT", function(inCombat)
 	for _, name in ipairs(popups) do
 		StaticPopup_Hide(name)
 	end
+	if msbtWindow then msbtWindow:Hide() end
 end)

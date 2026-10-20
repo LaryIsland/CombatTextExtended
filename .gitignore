@@ -3,6 +3,3 @@ libs/
 
 # Packages built by the BigWigs packager.
 .release/
-
-# Working notes: the design document, beta checks and the like. Not part of the repository.
-Notes/

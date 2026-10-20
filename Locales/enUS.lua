@@ -400,6 +400,21 @@ L["PROFILE_IMPORT_TEXT"] = "Paste a profile exported from this addon (Ctrl+V):"
 L["PROFILE_IMPORT_BAD"] = "That isn't a profile from this addon, or part of it is missing."
 L["PROFILE_IMPORT_NAME_TEXT"] = "Name the imported profile:"
 L["PROFILE_EXISTS"] = "There's already a profile called %s."
+-- Importing Mik's Scrolling Battle Text's profiles (MSBTImport.lua): the row's name, its button and its tooltip.
+L["PROFILE_MSBT"] = "Mik's Scrolling Battle Text"
+L["PROFILE_MSBT_IMPORT"] = "Import Profiles"
+L["PROFILE_MSBT_TIP"] = "Paste MSBT's saved settings."
+-- The window the saved settings are pasted into: its title and what to paste.
+L["PROFILE_MSBT_PASTE_TITLE"] = "Import from MSBT"
+L["PROFILE_MSBT_PASTE_TEXT"] = "Paste the contents of MikScrollingBattleText.lua from your WTF\\Account\\<account>\\SavedVariables folder."
+L["PROFILE_MSBT_BAD"] = "That isn't an MSBT saved settings file, or it has no profiles in it."
+-- %s MSBT's profiles, one per line.
+L["PROFILE_MSBT_CONFIRM"] = "Import these profiles from Mik's Scrolling Battle Text?\n\n%s"
+-- %s the new profiles' names.
+L["PROFILE_MSBT_DONE"] = "Imported from MSBT: %s"
+-- The imported profiles' names: MSBT's Default profile, then any other (%s its name in MSBT).
+L["PROFILE_MSBT_NAME"] = "MSBT Import"
+L["PROFILE_MSBT_NAME_OF"] = "MSBT Import (%s)"
 
 -- /ctx help (Commands.lua, design document 4.2)
 L["HELP_OPTIONS"] = "{/ctx} - options page and profiles"
